@@ -1,0 +1,16 @@
+# Compiled Java files
+out/
+*.class
+
+# IDE files
+.vscode/
+
+# Temporary files and backups
+*.tmp
+*.bak
+*~
+
+# Local environment files
+.env
+.env.*
+!.env.example
