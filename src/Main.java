@@ -10,6 +10,7 @@ public class Main {
     private static final BookDAO bookDAO = new BookDAO();
     private static final MemberDAO memberDAO = new MemberDAO();
     private static final IssueDAO issueDAO = new IssueDAO();
+    private static final CategoryDAO categoryDAO = new CategoryDAO();
 
     public static void main(String[] args) {
         boolean running = true;
@@ -27,15 +28,20 @@ public class Main {
                     case "5" -> deleteBook();
                     case "6" -> addMember();
                     case "7" -> viewMembers();
-                    case "8" -> issueBook();
-                    case "9" -> returnBook();
-                    case "10" -> viewIssues();
+                    case "8" -> searchMembers();
+                    case "9" -> updateMember();
+                    case "10" -> issueBook();
+                    case "11" -> returnBook();
+                    case "12" -> viewIssues();
+                    case "13" -> viewIssues(issueDAO.getCurrentIssues(), "CURRENT ISSUES");
+                    case "14" -> viewIssues(issueDAO.getOverdueIssues(), "OVERDUE ISSUES");
+                    case "15" -> showStatistics();
                     case "0" -> {
                         System.out.println("Thank you for using the system!");
                         running = false;
                     }
                     default -> System.out.println(
-                            "Invalid choice. Please enter a number from 0 to 10.");
+                            "Invalid choice.");
                 }
             } catch (SQLException e) {
                 System.out.println("Database operation failed: " + e.getMessage());
@@ -55,17 +61,20 @@ public class Main {
     }
 
     private static void printMenu() {
-        System.out.println("\n===== LIBRARY MANAGEMENT SYSTEM =====");
+        System.out.println("\n================================================");
+        System.out.println("          LIBRARY MANAGEMENT SYSTEM");
+        System.out.println("================================================");
         System.out.println("1. Add Book");
         System.out.println("2. View All Books");
-        System.out.println("3. Search Book by Title");
+        System.out.println("3. Search Book by Title or ISBN");
         System.out.println("4. Update Book");
         System.out.println("5. Delete Book");
         System.out.println("6. Register Member");
         System.out.println("7. View All Members");
-        System.out.println("8. Issue Book");
-        System.out.println("9. Return Book");
-        System.out.println("10. View Issue Records");
+        System.out.println("8. Search Members              9. Update Member");
+        System.out.println("10. Issue Book                 11. Return Book");
+        System.out.println("12. View Issue Records         13. Current Issues");
+        System.out.println("14. Overdue Issues             15. Statistics");
         System.out.println("0. Exit");
         System.out.print("Enter choice: ");
     }
@@ -75,10 +84,11 @@ public class Main {
     private static void addBook() throws SQLException {
         String title = readRequiredText("Title: ", 100);
         String author = readRequiredText("Author: ", 100);
-        String category = readRequiredText("Category: ", 50);
+        String isbn = readRequiredText("ISBN: ", 20);
+        int categoryId = selectCategory();
         int copies = readPositiveInt("Total copies: ");
 
-        Book book = new Book(title, author, category, copies);
+        Book book = new Book(title, author, isbn, categoryId, copies);
 
         if (bookDAO.addBook(book)) {
             System.out.println("Book added successfully!");
@@ -89,7 +99,7 @@ public class Main {
 
     private static void searchBook() throws SQLException {
         String title = readRequiredText("Enter title to search: ", 100);
-        viewBooks(bookDAO.searchBooksByTitle(title));
+        viewBooks(bookDAO.searchBooks(title));
     }
 
     private static void viewBooks(List<Book> books) {
@@ -117,14 +127,17 @@ public class Main {
 
         String title = readRequiredText("New title: ", 100);
         String author = readRequiredText("New author: ", 100);
-        String category = readRequiredText("New category: ", 50);
+        String isbn = readRequiredText("New ISBN: ", 20);
+        int categoryId = selectCategory();
         int copies = readNonNegativeInt("New total copies: ");
 
         Book updatedBook = new Book(
                 id,
                 title,
                 author,
-                category,
+                isbn,
+                categoryId,
+                "",
                 copies,
                 oldBook.getAvailableCopies()
         );
@@ -215,18 +228,33 @@ public class Main {
     }
 
     private static void viewIssues() throws SQLException {
-        List<Issue> issues = issueDAO.getAllIssues();
-
+        viewIssues(issueDAO.getAllIssues(), "ISSUE RECORDS");
+    }
+    private static void viewIssues(List<Issue> issues, String title) {
         if (issues.isEmpty()) {
             System.out.println("No issue records found.");
             return;
         }
 
-        System.out.println("\n--- ISSUE RECORDS ---");
+        System.out.println("\n--- " + title + " ---");
         for (Issue issue : issues) {
             System.out.println(issue);
         }
     }
+
+    private static int selectCategory() throws SQLException {
+        List<Category> categories = categoryDAO.getAllCategories();
+        System.out.println("Available categories:");
+        for (Category c : categories) System.out.println(c.categoryId() + ". " + c.name());
+        int selected = readPositiveInt("Category number: ");
+        for (Category c : categories) if (c.categoryId() == selected) return selected;
+        throw new IllegalArgumentException("Select one of the listed categories.");
+    }
+
+    private static void searchMembers() throws SQLException { viewMemberList(memberDAO.searchMembers(readRequiredText("Name or phone: ", 100))); }
+    private static void updateMember() throws SQLException { int id=readPositiveInt("Member ID: "); Member old=memberDAO.getMemberById(id); if(old==null){System.out.println("Member not found.");return;} Member changed=new Member(id,readRequiredText("Name: ",100),readRequiredText("Department: ",50),readRequiredText("Phone: ",15)); System.out.println(memberDAO.updateMember(changed)?"Member updated successfully!":"Member was not updated."); }
+    private static void viewMemberList(List<Member> members) { if(members.isEmpty()){System.out.println("No members found.");return;} for(Member m:members)System.out.println(m); }
+    private static void showStatistics() throws SQLException { LibraryStatistics s=bookDAO.getStatistics(); System.out.printf("Titles: %d | Copies: %d | Available: %d | Members: %d | Active: %d | Overdue: %d%n",s.titles(),s.copies(),s.available(),s.members(),s.activeIssues(),s.overdueIssues()); }
 
     // INPUT VALIDATION
 

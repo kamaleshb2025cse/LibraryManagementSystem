@@ -1,0 +1,2 @@
+import java.sql.*; import java.util.*;
+public class CategoryDAO { public List<Category> getAllCategories()throws SQLException{List<Category>x=new ArrayList<>();try(Connection c=DBConnection.getConnection();PreparedStatement p=c.prepareStatement("SELECT category_id,name FROM categories ORDER BY category_id");ResultSet r=p.executeQuery()){while(r.next())x.add(new Category(r.getInt(1),r.getString(2)));}return x;} }

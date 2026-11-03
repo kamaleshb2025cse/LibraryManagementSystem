@@ -6,15 +6,17 @@ public class Issue {
     private int bookId;
     private int memberId;
     private Date issueDate;
+    private Date dueDate;
     private Date returnDate;
     private String status;
 
     public Issue(int issueId, int bookId, int memberId,
-                 Date issueDate, Date returnDate, String status) {
+                 Date issueDate, Date dueDate, Date returnDate, String status) {
         this.issueId = issueId;
         this.bookId = bookId;
         this.memberId = memberId;
         this.issueDate = issueDate;
+        this.dueDate = dueDate;
         this.returnDate = returnDate;
         this.status = status;
     }
@@ -38,6 +40,7 @@ public class Issue {
     public Date getReturnDate() {
         return returnDate;
     }
+    public Date getDueDate() { return dueDate; }
 
     public String getStatus() {
         return status;
@@ -49,6 +52,7 @@ public class Issue {
                 + " | Book ID: " + bookId
                 + " | Member ID: " + memberId
                 + " | Issue Date: " + issueDate
+                + " | Due Date: " + dueDate
                 + " | Return Date: "
                 + (returnDate == null ? "Not returned" : returnDate)
                 + " | Status: " + status;

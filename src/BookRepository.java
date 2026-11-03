@@ -1,0 +1,2 @@
+import java.sql.SQLException; import java.util.List;
+public interface BookRepository { boolean addBook(Book b)throws SQLException; List<Book> getAllBooks()throws SQLException; Book getBookById(int id)throws SQLException; List<Book> searchBooks(String q)throws SQLException; boolean updateBook(Book b)throws SQLException; boolean deleteBook(int id)throws SQLException; LibraryStatistics getStatistics()throws SQLException; }
